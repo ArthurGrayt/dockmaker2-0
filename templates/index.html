@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Standardizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <div class="logo">
+                <i class="fa-solid fa-file-word"></i>
+                <h1>DockMaker</h1>
+            </div>
+            <p class="subtitle">Padronização Inteligente de Documentos</p>
+        </header>
+
+        <main class="main-content">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="models">
+                    <i class="fa-solid fa-shapes"></i> Modelos
+                </button>
+                <button class="tab-btn" data-tab="process">
+                    <i class="fa-solid fa-gears"></i> Processar Documento
+                </button>
+            </div>
+
+            <!-- MODELS TAB -->
+            <div class="tab-content active" id="models">
+                <div class="upload-section">
+                    <h3>Cadastrar Novo Modelo</h3>
+                    <div class="dropzone" id="model-dropzone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p>Arraste o arquivo DOCX do modelo aqui ou clique para selecionar</p>
+                        <input type="file" id="model-input" accept=".docx" hidden>
+                    </div>
+                </div>
+
+                <div class="models-list-section">
+                    <h3>Modelos Disponíveis</h3>
+                    <div id="models-grid" class="models-grid">
+                        <!-- Model Cards injected here -->
+                        <div class="empty-state">Nenhum modelo cadastrado.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROCESS TAB -->
+            <div class="tab-content" id="process">
+                <div class="process-flow">
+                    
+                    <!-- Step 1: Upload Content -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-number">1</span>
+                            <h4>Upload do Documento</h4>
+                        </div>
+                        <div class="dropzone" id="content-dropzone">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                            <p>Arraste o arquivo DOCX a ser padronizado</p>
+                            <input type="file" id="content-input" accept=".docx" hidden>
+                        </div>
+                        <div id="content-file-info" class="file-info hidden">
+                            <i class="fa-solid fa-file-circle-check"></i>
+                            <span id="content-filename">arquivo.docx</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Select Model -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-number">2</span>
+                            <h4>Selecione o Modelo</h4>
+                        </div>
+                        <div class="model-selector">
+                            <select id="model-select">
+                                <option value="" disabled selected>Escolha um modelo...</option>
+                            </select>
+                        </div>
+                        <div id="selected-model-preview" class="model-preview-box hidden">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>Prévia: <strong id="preview-model-name">Nome do Modelo</strong></span>
+                            <!-- Placeholder for visual preview -->
+                            <div class="visual-placeholder">
+                                <div class="ph-header"></div>
+                                <div class="ph-body"></div>
+                                <div class="ph-footer"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Action -->
+                    <div class="step-card action-card">
+                        <button id="btn-process" class="btn-primary" disabled>
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Processar Documento
+                        </button>
+                    </div>
+
+                    <!-- Result -->
+                    <div id="result-area" class="result-area hidden">
+                        <div class="success-message">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Processamento Concluído!</span>
+                        </div>
+                        <a href="#" id="download-link" class="btn-download">
+                            Baixar Documento Final <i class="fa-solid fa-download"></i>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
