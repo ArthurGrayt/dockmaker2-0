@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # config
 import tempfile
-from storage import get_storage
+from storage import get_storage, BlobStorage
 
 # storage setup
 storage = get_storage()
