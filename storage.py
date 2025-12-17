@@ -28,6 +28,7 @@ class LocalStorage(StorageInterface):
 
     def save(self, file_storage, folder, filename):
         target = self._get_path(folder, filename)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
         file_storage.save(target)
         return filename
 
@@ -51,6 +52,7 @@ class LocalStorage(StorageInterface):
         
     def upload_from_path(self, local_path, folder, filename):
         target = self._get_path(folder, filename)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
         shutil.copy(local_path, target)
         return filename
 
