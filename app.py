@@ -12,12 +12,20 @@ from storage import get_storage
 
 # storage setup
 storage = get_storage()
-# For local processing steps we still need tmp info
-# but storage handles persistence.
+STORAGE_TYPE = "Blob" if isinstance(storage, BlobStorage) else "Local"
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/debug-config')
+def debug_config():
+    # Helper to check config
+    return jsonify({
+        'storage_type': STORAGE_TYPE,
+        'vercel_env': bool(os.environ.get('VERCEL')),
+        'has_blob_token': bool(os.environ.get('BLOB_READ_WRITE_TOKEN'))
+    })
 
 @app.route('/api/models', methods=['GET', 'POST'])
 def handle_models():
@@ -30,23 +38,21 @@ def handle_models():
         
         if file and file.filename.endswith('.docx'):
             filename = secure_filename(file.filename)
-            # Save to storage (models folder)
             try:
                 storage.save(file, 'models', filename)
                 return jsonify({'message': 'Model uploaded', 'filename': filename})
             except Exception as e:
-                return jsonify({'error': str(e)}), 500
+                return jsonify({'error': f"Upload failed ({STORAGE_TYPE}): {str(e)}"}), 500
         return jsonify({'error': 'Invalid file type'}), 400
     
     else:
         # GET
         try:
             models = storage.list_files('models')
-            # Filter just in case
             models = [f for f in models if f.endswith('.docx')]
             return jsonify(models)
         except Exception as e:
-             return jsonify({'error': str(e)}), 500
+             return jsonify({'error': f"List failed ({STORAGE_TYPE}): {str(e)}"}), 500
 
 @app.route('/api/upload_content', methods=['POST'])
 def upload_content():
@@ -62,7 +68,7 @@ def upload_content():
             storage.save(file, 'uploads', unique_name)
             return jsonify({'filename': unique_name, 'original_name': file.filename})
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': f"Upload content failed ({STORAGE_TYPE}): {str(e)}"}), 500
     return jsonify({'error': 'Invalid file type'}), 400
 
 @app.route('/api/process', methods=['POST'])
@@ -83,32 +89,23 @@ def process():
         
         try:
             # Download
-            storage.download_to_path(model_filename, 'models', model_path)
-            storage.download_to_path(content_filename, 'uploads', content_path)
+            try:
+                storage.download_to_path(model_filename, 'models', model_path)
+            except Exception as e:
+                 return jsonify({'error': f"Failed to download model ({STORAGE_TYPE}). Persistence config missing? Error: {str(e)}"}), 404
+            
+            try:
+                storage.download_to_path(content_filename, 'uploads', content_path)
+            except Exception as e:
+                 return jsonify({'error': f"Failed to download content ({STORAGE_TYPE}). Persistence config missing? Error: {str(e)}"}), 404
             
             # Process
-            # We create a new processor instance just for this op to avoid global state issues with paths
-            # actually DocxProcessor just needs paths
-            processor.output_folder = tmp_dir # Hackily update? No, pass paths.
-            # DocxProcessor process_document returns output_path
-            # But DocxProcessor was init with global folders.
-            # Let's instantiate a localized one or ignore the instance folders if methods allow.
-            # Looking at docx_processor.py:
-            # process_document uses self.output_folder to construct output path if we pass filename?
-            # actually it takes (content_path, model_path, output_filename).
-            # And calculates output_path = join(self.output_folder, output_filename).
-            # So we need to ensure the processor uses our tmp_dir.
             local_processor = DocxProcessor(tmp_dir, tmp_dir) 
             generated_path = local_processor.process_document(content_path, model_path, output_filename)
             
             # Upload result
-            # We assume generated_path is what we want to upload
-            # We upload to 'output' folder
             result_url_or_name = storage.upload_from_path(generated_path, 'output', output_filename)
             
-            # If storage is Blob, result_url_or_name is a public URL.
-            # If Local, it is the filename.
-            # We need to standardize response.
             if result_url_or_name.startswith('http'):
                 return jsonify({'download_url': result_url_or_name})
             else:
