@@ -7,9 +7,21 @@ from docx_processor import DocxProcessor
 app = Flask(__name__)
 
 # config
-UPLOAD_FOLDER = os.path.abspath('uploads')
-MODELS_FOLDER = os.path.abspath('models')
-OUTPUT_FOLDER = os.path.abspath('output')
+import tempfile
+
+# config
+if os.environ.get('VERCEL'):
+    # Vercel filesystem is read-only except for /tmp
+    BASE_DIR = tempfile.gettempdir()
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+    MODELS_FOLDER = os.path.join(BASE_DIR, 'models')
+    OUTPUT_FOLDER = os.path.join(BASE_DIR, 'output')
+else:
+    # Local development
+    UPLOAD_FOLDER = os.path.abspath('uploads')
+    MODELS_FOLDER = os.path.abspath('models')
+    OUTPUT_FOLDER = os.path.abspath('output')
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(MODELS_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
